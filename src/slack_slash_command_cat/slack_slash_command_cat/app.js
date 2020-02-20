@@ -80,7 +80,7 @@ async function sendWaitingMessage(event) {
     const response = {
         channel: event.channel_id,
         response_type: "ephemeral",
-        text: "처리가 지연되고 있습니다. 잠시만 기다려 주세요."
+        text: "수행 중입니다. 잠시만 기다려 주세요."
     };
 
     const options = {
