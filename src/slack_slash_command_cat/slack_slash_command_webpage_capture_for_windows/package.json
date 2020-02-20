@@ -1,0 +1,16 @@
+{
+  "name": "slack_slash_command_webpage_capture_for_windows",
+  "version": "0.0.0",
+  "description": "slack slash command webpage capture for windows.",
+  "main": "app.js",
+  "author": {
+    "name": "bwv21"
+  },
+  "dependencies": {
+    "aws-sdk": "^2.578.0",
+    "phantom": "^6.3.0",
+    "request": "^2.88.0",
+    "request-promise": "^4.2.5",
+    "sharp": "^0.23.3"
+  }
+}

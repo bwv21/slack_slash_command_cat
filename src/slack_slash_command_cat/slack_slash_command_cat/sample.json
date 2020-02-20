@@ -1,0 +1,12 @@
+﻿{
+  "token": "",
+  "team_id": "",
+  "team_domain": "",
+  "channel_id": "",
+  "channel_name": "z_bwv21_test",
+  "user_id": "",
+  "user_name": "bwv21",
+  "command": "/cat",
+  "text": "price tesla",
+  "response_url": "https://hooks.slack.com/commands/"
+}

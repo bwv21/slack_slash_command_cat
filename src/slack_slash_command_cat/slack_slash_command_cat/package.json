@@ -1,0 +1,14 @@
+{
+  "name": "slack_slash_command_cat",
+  "version": "0.0.0",
+  "description": "slack slash command cat.",
+  "main": "app.js",
+  "author": {
+    "name": "bwv21"
+  },
+  "dependencies": {
+    "aws-sdk": "^2.573.0",
+    "request": "^2.88.0",
+    "request-promise": "^4.2.5"
+  }
+}

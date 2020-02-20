@@ -1,0 +1,15 @@
+{
+  "name": "devcat_slack_slash_command",
+  "version": "0.0.0",
+  "description": "",
+  "main": "app.js",
+  "author": {
+    "name": "bwv21"
+  },
+  "dependencies": {
+    "phantom": "^6.3.0",
+    "request": "^2.88.0",
+    "request-promise": "^4.2.5",
+    "sharp": "^0.23.2"
+  }
+}
