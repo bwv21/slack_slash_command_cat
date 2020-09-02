@@ -23,7 +23,7 @@ variable "slack_api_gateway_stage_name" {
 }
 
 variable "slack_slash_command_upload_s3_bucket" {
-  default = "slash.slack.bwv21.io"
+  default = "bucket.name"
 }
 
 variable "slack_slash_command_lambda_role_name" {
