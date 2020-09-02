@@ -34,7 +34,7 @@ exports.handler = async (event) => {
 };
 
 function checkValidRequest(event) {
-    if (process.env.slack_slash_command_token == null) {
+    if (process.env.slack_slash_command_tokens == null) {
         return `슬랙 슬래시 명령어 토큰이 설정되지 않았습니다.`;
     }
 
