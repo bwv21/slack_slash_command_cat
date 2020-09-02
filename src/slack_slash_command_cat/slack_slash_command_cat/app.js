@@ -51,7 +51,7 @@ function checkValidRequest(event) {
 
         if (findChannel === false) {
             console.log(`fobidden channel: ${event.channel_name}`);
-            return `명령어를 실행할 수 없는 채널입니다. 실행 가능한 채널 목록: ${process.env.available_channels}`;
+            return `명령어를 실행할 수 없는 채널입니다.`;
         }
     }
 
