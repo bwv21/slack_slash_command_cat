@@ -34,7 +34,20 @@ exports.handler = async (event) => {
 };
 
 function checkValidRequest(event) {
-    if (event.token !== process.env.slack_slash_command_token) {
+    if (process.env.slack_slash_command_token == null) {
+        return `슬랙 슬래시 명령어 토큰이 설정되지 않았습니다.`;
+    }
+
+    let findToken = false;
+    const splits = process.env.slack_slash_command_tokens;
+    for (let i = 0; i < splits.length; ++i) {
+        if (splits[i].trim() === event.token) {
+            findToken = true;
+            break;
+        }
+    }
+
+    if (findToken === false) {
         console.log(`fail checkValidRequest: ${event.token}`);
         return `유효한 슬랙 슬래시 명령어 토큰이 아닙니다.`;
     }
