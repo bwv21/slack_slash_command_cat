@@ -41,7 +41,7 @@ function checkValidRequest(event) {
     let findToken = false;
     const splits = process.env.slack_slash_command_tokens;
     for (let i = 0; i < splits.length; ++i) {
-        if (splits[i].trim() === event.token) {
+        if (splits[i].trim() == event.token.toString().trim()) {
             findToken = true;
             break;
         }
@@ -56,7 +56,7 @@ function checkValidRequest(event) {
         let findChannel = false;
         const splits = process.env.available_channels.split(",");
         for (let i = 0; i < splits.length; ++i) {
-            if (splits[i].trim() === event.channel_name) {
+            if (splits[i].trim() == event.channel_name.toString().trim()) {
                 findChannel = true;
                 break;
             }
