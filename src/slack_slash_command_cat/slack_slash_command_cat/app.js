@@ -38,7 +38,7 @@ function checkValidRequest(event) {
     const config = channels[event.team_domain];
 
     const token = config.slack_slash_command_token.trim();
-    if (token === event.token) {
+    if (token != event.token) {
         console.log(`fail checkValidRequest: ${token} != ${event.token}`);
         return `유효한 슬랙 슬래시 명령어 토큰이 아닙니다.`;
     }
