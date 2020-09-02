@@ -34,29 +34,19 @@ exports.handler = async (event) => {
 };
 
 function checkValidRequest(event) {
-    if (process.env.slack_slash_command_tokens == null) {
-        return `슬랙 슬래시 명령어 토큰이 설정되지 않았습니다.`;
-    }
+    const channels = JSON.parse(process.env.channels);
+    const config = channels[event.team_domain];
 
-    let findToken = false;
-    const splits = process.env.slack_slash_command_tokens.split(",");
-    for (let i = 0; i < splits.length; ++i) {
-        if (splits[i].trim() == event.token.toString().trim()) {
-            findToken = true;
-            break;
-        }
-    }
-
-    if (findToken === false) {
-        console.log(`fail checkValidRequest: ${event.token}`);
+    const token = config.slack_slash_command_token.trim();
+    if (token === event.token) {
+        console.log(`fail checkValidRequest: ${token} != ${event.token}`);
         return `유효한 슬랙 슬래시 명령어 토큰이 아닙니다.`;
     }
 
-    if (event.channel_name !== "directmessage" && process.env.available_channels != null) {
+    if (event.channel_name !== "directmessage" && config.available_channels != null) {
         let findChannel = false;
-        const splits = process.env.available_channels.split(",");
-        for (let i = 0; i < splits.length; ++i) {
-            if (splits[i].trim() == event.channel_name.toString().trim()) {
+        for (let i = 0; i < config.available_channels.length; ++i) {
+            if (config.available_channels[i].trim() == event.channel_name.toString().trim()) {
                 findChannel = true;
                 break;
             }
@@ -184,7 +174,6 @@ async function toSlack(response, event) {
 }
 
 function findWebhookUrl(teamDomain) {
-    const webhookUrlJson = JSON.parse(process.env["team_domain_to_webhook_url"]);
-    const webhookUrl = webhookUrlJson[teamDomain];
-    return webhookUrl;
+    const channels = JSON.parse(process.env.channels);
+    return channels[teamDomain].webhook_url;
 }
