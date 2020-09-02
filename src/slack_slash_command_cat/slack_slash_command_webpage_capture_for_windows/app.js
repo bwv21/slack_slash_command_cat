@@ -420,6 +420,7 @@ function getHeight(assetType, assetTypeSub) {
             const cropHeights = JSON.parse(process.env.crop_height);
             height = cropHeights[assetType];
             if (height && 0 < height) {
+                console.log("use process.env height.");
                 return height;
             }
         }
@@ -457,7 +458,7 @@ function getHeight(assetType, assetTypeSub) {
 
 async function cropImageFile(rawFileName, cropFileName, width, height, left, top) {
     try {
-        console.log(`cropImageFile rawFileName, cropFileName: ${rawFileName}, ${cropFileName}`);
+        console.log(`cropImageFile rawFileName, cropFileName, (width, height, left, top): ${rawFileName}, ${cropFileName}, (${width}, ${height}, ${left}, ${top})`);
 
         await sharp(rawFileName).extract({ width: width, height: height, left: left, top: top }).toFile(cropFileName);
 
