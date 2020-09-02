@@ -132,7 +132,7 @@ async function work(event, page) {
     if (image.exist_s3 === false) {
         const localRawFileName = LOCAL_DIR + image.raw_file_name;
         const cropImageFileName = LOCAL_DIR + image.crop_file_name;
-        const successCrop = await cropImageFile(localRawFileName, cropImageFileName, 675, getHeight(image.asset_type, image.asset_type_sub), 0, 120 + image.banner_height);
+        const successCrop = await cropImageFile(localRawFileName, cropImageFileName, 655, getHeight(image.asset_type, image.asset_type_sub), 0, 120 + image.banner_height);
         if (successCrop === false) {
             result.error = "fail cropImageFile";
             return result;
@@ -169,7 +169,7 @@ function writeResultCache(key, result) {
     Cache.results[key] = result;
 }
 
-function makeInvestingUrl(keyword) {
+function choiceInvestingUrl(keyword) {
     var investingUrl = "https://www.investing.com";
 
     if (/[ㄱ-ㅎ|ㅏ-ㅣ|가-힣]/.test(keyword)) {
@@ -184,7 +184,7 @@ async function getChartUrlByInvesting(keyword) {
     console.log(`getChartUrlByInvesting: ${keyword}`);
 
     try {
-        const investingUrl = makeInvestingUrl(keyword);
+        const investingUrl = choiceInvestingUrl(keyword);
 
         const options = {
             method: "POST",
@@ -332,21 +332,30 @@ async function createWebpageImage(url, timeKey, page) {
 
         const content = await page.property("content");
 
-        // 할 줄 몰라서 대충 찾은 것.
+        // 20200902: 이유는 알 수 없지만 배너가 사라졌다. 일단 배너 계산하지 않음.
         let bannerHeight = 250;
-        const bannerIndex = content.indexOf("wideTopBanner");
-        if (bannerIndex > 0) {
-            const displayNoneIndex = content.indexOf("height:250px; display: none;", bannerIndex);
-            if (displayNoneIndex > bannerIndex) {
-                bannerHeight = 90;
+        if (process.env.exist_banner === "1") {
+            // 할 줄 몰라서 대충 찾은 것.
+            const bannerIndex = content.indexOf("wideTopBanner");
+            if (bannerIndex > 0) {
+                const displayNoneIndex = content.indexOf("height:250px; display: none;", bannerIndex);
+                if (displayNoneIndex > bannerIndex) {
+                    bannerHeight = 90;
+                }
+
+                const displayNoneIndex2 = content.indexOf("height: 250px; display: none;", bannerIndex);
+                if (displayNoneIndex2 > bannerIndex) {
+                    bannerHeight = 90;
+                }
             }
 
-            const displayNoneIndex2 = content.indexOf("height: 250px; display: none;", bannerIndex);
-            if (displayNoneIndex2 > bannerIndex) {
-                bannerHeight = 90;
-            }
+            console.log(`bannerHeight: ${bannerHeight}`);
+        } else {
+            bannerHeight = 0;
+
+            console.log(`zero bannerHeight!`);
         }
-
+        
         const result = {
             exist_s3: false,
             code: code,
@@ -405,25 +414,40 @@ async function checkExistS3(s3Key) {
 }
 
 function getHeight(assetType, assetTypeSub) {
+    let height = 0;
+    try {
+        const cropHeights = JSON.parse(process.env["crop_height"]);
+        height = cropHeights[assetType];
+        if (height && 0 < height) {
+            return height;
+        }
+    } catch (exception) {
+        height = -1;
+    }
+
+    if (height == null || height <= 0) {
+        console.log("use default height.");
+    }
+
     if (assetType === "stock") {
-        return 1020;
+        return 1100;
     } else if (assetType === "equities") {
-        return 1020;
+        return 1100;
     } else if (assetType === "crypto") {
-        return 770;
+        return 810;
     } else if (assetType === "commodities") {
-        return 900;
-    } else if (assetType === "rates-bonds") {
-        return 875;
-    } else if (assetType === "indices") {
         return 990;
+    } else if (assetType === "rates-bonds") {
+        return 950;
+    } else if (assetType === "indices") {
+        return 910;
     } else if (assetType === "currencies") {
-        return 945;
+        return 1050;
     }
 
     // https://www.investing.com//crypto/bitcoin/btc-usd
     if (assetTypeSub === "crypto") {
-        return 925;
+        return 1025;
     }
 
     return 1000;
