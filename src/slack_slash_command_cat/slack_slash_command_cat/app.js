@@ -39,7 +39,7 @@ function checkValidRequest(event) {
         return `유효한 슬랙 슬래시 명령어 토큰이 아닙니다.`;
     }
 
-    if (process.env.available_channels != null) {
+    if (event.channel_name !== "directmessage" && process.env.available_channels != null) {
         let findChannel = false;
         const splits = process.env.available_channels.split(",");
         for (let i = 0; i < splits.length; ++i) {
