@@ -416,10 +416,12 @@ async function checkExistS3(s3Key) {
 function getHeight(assetType, assetTypeSub) {
     let height = 0;
     try {
-        const cropHeights = JSON.parse(process.env["crop_height"]);
-        height = cropHeights[assetType];
-        if (height && 0 < height) {
-            return height;
+        if (process.env.crop_height != null) {
+            const cropHeights = JSON.parse(process.env.crop_height);
+            height = cropHeights[assetType];
+            if (height && 0 < height) {
+                return height;
+            }
         }
     } catch (exception) {
         height = -1;

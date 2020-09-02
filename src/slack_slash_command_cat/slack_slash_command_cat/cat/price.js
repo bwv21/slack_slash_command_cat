@@ -1,7 +1,7 @@
 ﻿"use strict";
 
 const AWS = require("aws-sdk");
-AWS.config.update({ region: 'ap-northeast-2' });
+AWS.config.update({ region: 'ap-northeast-2' }); // 수정해야 함.
 const lambda = new AWS.Lambda();
 
 const HELP_TEXT = `/cat price 키워드(아마존, 나스닥, 골드, 미국10년채권, 비트코인 ...)`;

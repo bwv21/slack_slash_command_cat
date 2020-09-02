@@ -107,7 +107,7 @@ async function work(event, page) {
         console.log(`hit cache: <${resultCacheKey}, ${event.keyword}>`);
         return cachedResult;
     }
-    
+
     var chartUrl = await getChartUrlByGoogle(event.keyword, page);
     if (chartUrl == null || chartUrl.length <= 0) {
         console.log("fail find by google. try by investing.com");
@@ -121,7 +121,7 @@ async function work(event, page) {
 
     // 배당, 또는 스트리밍 차트로 넘어가는 것 막음(100% 검증 안됨).
     chartUrl = chartUrl.replace("-dividends", "").replace("-streaming-chart", "").replace("-chart", "").replace("-earnings", "");
-    
+
     const image = await createWebpageImage(chartUrl, timeKey, page);
     if (image == null) {
         result.error = "fail createWebpageImageFile";
@@ -355,7 +355,7 @@ async function createWebpageImage(url, timeKey, page) {
 
             console.log(`zero bannerHeight!`);
         }
-        
+
         const result = {
             exist_s3: false,
             code: code,
@@ -416,10 +416,12 @@ async function checkExistS3(s3Key) {
 function getHeight(assetType, assetTypeSub) {
     let height = 0;
     try {
-        const cropHeights = JSON.parse(process.env["crop_height"]);
-        height = cropHeights[assetType];
-        if (height && 0 < height) {
-            return height;
+        if (process.env.crop_height != null) {
+            const cropHeights = JSON.parse(process.env.crop_height);
+            height = cropHeights[assetType];
+            if (height && 0 < height) {
+                return height;
+            }
         }
     } catch (exception) {
         height = -1;
