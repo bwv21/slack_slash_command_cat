@@ -11,6 +11,12 @@ exports.handler = async (event) => {
     console.log(JSON.stringify(event));
 
     try {
+        var error = checkValidRequest(event);
+        if (error != null) {
+            await sendEphemeralMessage(event.channel_id, event.response_url, error);
+            return "error";
+        }
+
         return await main(event);
     } catch (exception) {
         console.error("=================== event beg ===================");
@@ -21,9 +27,62 @@ exports.handler = async (event) => {
         console.error(exception);
         console.error("=================== exception end ===================");
 
+        await sendEphemeralMessage(event.channel_id, event.response_url, `명령어 실행에 실패하였습니다. ${exception.message}`);
+
         return "error";
     }
 };
+
+function checkValidRequest(event) {
+    if (event.token !== process.env.slack_slash_command_token) {
+        console.log(`fail checkValidRequest: ${event.token}`);
+        return `유효한 슬랙 슬래시 명령어 토큰이 아닙니다.`;
+    }
+
+    if (process.env.available_channels != null) {
+        let findChannel = false;
+        const splits = process.env.available_channels.split(",");
+        for (let i = 0; i < splits.length; ++i) {
+            if (splits[i] === event.channel_name) {
+                findChannel = true;
+            }
+        }
+
+        if (findChannel === false) {
+            console.log(`fobidden channel: ${event.channel_name}`);
+            return `명령어를 실행할 수 없는 채널입니다. 실행 가능한 채널 목록: ${process.env.available_channels}`;
+        }
+    }
+
+    return null;
+}
+
+
+async function sendEphemeralMessage(channel_id, response_url, text) {
+    if (process.env.is_local) {
+        return;
+    }
+
+    const response = {
+        channel: channel_id,
+        response_type: "ephemeral",
+        text: text
+    };
+
+    const options = {
+        method: "POST",
+        url: response_url,
+        headers: {
+            'Content-Type': "application/json"
+        },
+        json: response
+    };
+
+    const result = await request.post(options);
+    if (result !== "ok") {
+        console.error("Fail Send Slack. Result: ", result);
+    }
+}
 
 async function main(event) {
     const command = event.command.replace("/", "").toLowerCase();
@@ -43,7 +102,7 @@ async function main(event) {
 
     var response = null;
     if (raceResult === "timeout") {
-        await sendWaitingMessage(event);
+        await sendEphemeralMessage(event.channel_id, event.response_url, "수행 중입니다. 잠시만 기다려 주세요.");
         response = await workTask;
     } else {
         response = raceResult;
@@ -70,32 +129,6 @@ function findWorker(command, workerName) {
     }
 
     return worker;
-}
-
-async function sendWaitingMessage(event) {
-    if (process.env.is_local) {
-        return;
-    }
-
-    const response = {
-        channel: event.channel_id,
-        response_type: "ephemeral",
-        text: "수행 중입니다. 잠시만 기다려 주세요."
-    };
-
-    const options = {
-        method: "POST",
-        url: event.response_url,
-        headers: {
-            'Content-Type': "application/json"
-        },
-        json: response
-    };
-
-    const result = await request.post(options);
-    if (result !== "ok") {
-        console.error("Fail Send Slack. Result: ", result);
-    }
 }
 
 async function toSlack(response, event) {
