@@ -43,8 +43,9 @@ function checkValidRequest(event) {
         let findChannel = false;
         const splits = process.env.available_channels.split(",");
         for (let i = 0; i < splits.length; ++i) {
-            if (splits[i] === event.channel_name) {
+            if (splits[i].trim() === event.channel_name) {
                 findChannel = true;
+                break;
             }
         }
 
