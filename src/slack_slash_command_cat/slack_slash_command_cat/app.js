@@ -39,7 +39,7 @@ function checkValidRequest(event) {
     }
 
     let findToken = false;
-    const splits = process.env.slack_slash_command_tokens;
+    const splits = process.env.slack_slash_command_tokens.splits(",");
     for (let i = 0; i < splits.length; ++i) {
         if (splits[i].trim() == event.token.toString().trim()) {
             findToken = true;
