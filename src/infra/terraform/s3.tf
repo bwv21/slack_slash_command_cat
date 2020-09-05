@@ -1,4 +1,4 @@
-resource "aws_s3_bucket" "UploadS3Bucket" {
+resource "aws_s3_bucket" "upload_s3_bucket" {
   bucket = var.slack_slash_command_upload_s3_bucket
   policy = <<POLICY
 {
