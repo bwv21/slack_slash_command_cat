@@ -417,7 +417,7 @@ function getTop() {
     let top = 500;
     try {
         if (process.env.crop_top != null) {
-            top = process.env.crop_top;
+            top = parseInt(process.env.crop_top);
             if (0 < top) {
                 console.log(`use env crop_height: ${top}`);
                 return top;
