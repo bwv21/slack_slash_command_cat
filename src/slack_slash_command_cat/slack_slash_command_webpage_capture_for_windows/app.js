@@ -417,9 +417,9 @@ function getTop() {
     let top = 500;
     try {
         if (process.env.crop_top != null) {
-            const top = JSON.parse(process.env.crop_top);
+            top = JSON.parse(process.env.crop_top);
             if (top && 0 < top) {
-                console.log("use process.env crop_height.");
+                console.log(`use process.env crop_height: ${top}`);
                 return top;
             }
         }
@@ -437,7 +437,7 @@ function getHeight(assetType, assetTypeSub) {
             const cropHeights = JSON.parse(process.env.crop_height);
             height = cropHeights[assetType];
             if (height && 0 < height) {
-                console.log("use process.env crop_height.");
+                console.log(`use process.env crop_height: ${cropHeights}(${assetType}/${assetTypeSub})`);
                 return height;
             }
         }
