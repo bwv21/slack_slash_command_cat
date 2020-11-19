@@ -416,10 +416,10 @@ async function checkExistS3(s3Key) {
 function getTop() {
     let top = 500;
     try {
-        if (process.env.top != null) {
-            const top = JSON.parse(process.env.top);
+        if (process.env.crop_top != null) {
+            const top = JSON.parse(process.env.crop_top);
             if (top && 0 < top) {
-                console.log("use process.env top.");
+                console.log("use process.env crop_height.");
                 return top;
             }
         }
@@ -437,7 +437,7 @@ function getHeight(assetType, assetTypeSub) {
             const cropHeights = JSON.parse(process.env.crop_height);
             height = cropHeights[assetType];
             if (height && 0 < height) {
-                console.log("use process.env height.");
+                console.log("use process.env crop_height.");
                 return height;
             }
         }
