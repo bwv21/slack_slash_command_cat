@@ -132,7 +132,7 @@ async function work(event, page) {
     if (image.exist_s3 === false) {
         const localRawFileName = LOCAL_DIR + image.raw_file_name;
         const cropImageFileName = LOCAL_DIR + image.crop_file_name;
-        const successCrop = await cropImageFile(localRawFileName, cropImageFileName, 655, getHeight(image.asset_type, image.asset_type_sub), 0, 120 + image.banner_height);
+        const successCrop = await cropImageFile(localRawFileName, cropImageFileName, 655, getHeight(image.asset_type, image.asset_type_sub), 0, getTop() + image.banner_height);
         if (successCrop === false) {
             result.error = "fail cropImageFile";
             return result;
@@ -411,6 +411,23 @@ async function checkExistS3(s3Key) {
         console.log(`not exist in s3: ${s3Key}`);
         return false;
     }
+}
+
+function getTop() {
+    let top = 500;
+    try {
+        if (process.env.top != null) {
+            const top = JSON.parse(process.env.top);
+            if (top && 0 < top) {
+                console.log("use process.env top.");
+                return top;
+            }
+        }
+    } catch (exception) {
+        // ...
+    }
+
+    return top;
 }
 
 function getHeight(assetType, assetTypeSub) {
