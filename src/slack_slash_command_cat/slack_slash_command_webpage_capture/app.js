@@ -1,4 +1,4 @@
-﻿"use strict";
+"use strict";
 
 if (process.env.is_local != null) {
     process.env.NODE_TLS_REJECT_UNAUTHORIZED = "0";
@@ -14,11 +14,16 @@ const sharp = require("sharp");
 const AWS = require("aws-sdk");
 
 const LOCAL_DIR = process.env.is_local ? "./" : "/tmp/";
-const INVESTING = "investing";
+const S3_PATH_PREFIX = "price";
 const CACHE_LIFETIME = parseInt(process.env.image_cache_lifetime_sec);
 
 const s3 = new AWS.S3();
 const Cache = {};
+
+
+function sleep(ms) {
+    return new Promise((resolve, reject) => setTimeout(resolve, ms));
+}
 
 exports.handler = async (event) => {
     console.log(JSON.stringify(event));
@@ -108,20 +113,7 @@ async function work(event, page) {
         return cachedResult;
     }
 
-    var chartUrl = await getChartUrlByGoogle(event.keyword, page);
-    if (chartUrl == null || chartUrl.length <= 0) {
-        console.log("fail find by google. try by investing.com");
-        chartUrl = await getChartUrlByInvesting(event.keyword);
-    }
-
-    if (chartUrl == null || chartUrl.length <= 0) {
-        result.error = "fail get chart url.";
-        return result;
-    }
-
-    // 배당, 또는 스트리밍 차트로 넘어가는 것 막음(100% 검증 안됨).
-    chartUrl = chartUrl.replace("-dividends", "").replace("-streaming-chart", "").replace("-chart", "").replace("-earnings", "");
-
+    var chartUrl = `https://google.com/search?q=chart+${event.keyword}`;
     const image = await createWebpageImage(chartUrl, timeKey, page);
     if (image == null) {
         result.error = "fail createWebpageImageFile";
@@ -169,118 +161,6 @@ function writeResultCache(key, result) {
     Cache.results[key] = result;
 }
 
-function choiceInvestingUrl(keyword) {
-    var investingUrl = "https://www.investing.com";
-
-    if (/[ㄱ-ㅎ|ㅏ-ㅣ|가-힣]/.test(keyword)) {
-        console.log("exist hangle.");
-        investingUrl = "https://kr.investing.com";
-    }
-
-    return investingUrl;
-}
-
-async function getChartUrlByInvesting(keyword) {
-    console.log(`getChartUrlByInvesting: ${keyword}`);
-
-    try {
-        const investingUrl = choiceInvestingUrl(keyword);
-
-        const options = {
-            method: "POST",
-            url: investingUrl + "/search/service/searchTopBar",
-            headers: {
-                'Accept': "application/json",
-                'Origin': investingUrl,
-                'X-Requested-With': "XMLHttpRequest",
-                'User-Agent': "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/78.0.3904.97 Safari/537.36",
-                'Referer': investingUrl,
-                'Content-Type': "application/x-www-form-urlencoded"
-            }
-        };
-
-        const resultString = await request.post(options).form({ search_text: keyword });
-        if (resultString == null || resultString.length <= 0) {
-            console.error("result string is null");
-            console.error("==============================================");
-            console.log(resultString);
-            console.error("==============================================");
-            return null;
-        }
-
-        const result = JSON.parse(resultString);
-        if (result == null || result.quotes == null || result.quotes.length <= 0) {
-            console.error("invalid result");
-            console.error("==============================================");
-            console.log(resultString);
-            console.error("==============================================");
-            return null;
-        }
-
-        const url = `${investingUrl}/${result.quotes[0].link}`;
-
-        console.log(`chart-url: ${url}`);
-
-        return url;
-    } catch (exception) {
-        console.error("getChartUrlByInvesting exception: ", exception);
-        return null;
-    }
-}
-
-async function getChartUrlByGoogle(keyword, page) {
-    await page.on("onResourceRequested",
-        function (requestData) {
-            // console.log("requesting: ", requestData.url);
-        });
-
-    try {
-        const status = await page.open(encodeURI(`https://google.com/search?q=investing.com ${keyword}`));
-        if (status !== "success") {
-            console.log("fail google query: ", keyword);
-            return null;
-        }
-
-        const content = await page.property("content");
-
-        const start = content.indexOf("https://kr.investing.com");
-        if (start < 0) {
-            console.log("fail find start: ", keyword);
-            console.log("========= content beg ============");
-            console.log(content);
-            console.log("========= content end ============");
-            return null;
-        }
-
-        const end = content.indexOf("&", start);
-        if (end < 0) {
-            console.log("fail find end: ", keyword);
-            return null;
-        }
-
-        if (start >= end) {
-            console.log("fail find start/end: ", keyword);
-            return null;
-        }
-
-        const url = content.substring(start, end);
-        if (url.length <= 0) {
-            console.log("fail find url: ", keyword);
-            return null;
-        }
-
-        console.log(`chart-url: ${url}`);
-
-        return url;
-    } catch (exception) {
-        console.error("createWebpageImage exception: ", exception);
-
-        return null;
-    } finally {
-        //await page.close();
-    }
-}
-
 async function createWebpageImage(url, timeKey, page) {
     console.log(`createWebpageImage url, timeKey: ${url}, ${timeKey}`);
 
@@ -298,18 +178,15 @@ async function createWebpageImage(url, timeKey, page) {
 
         // https://kr.investing.com/crypto/bitcoin
         // https://kr.investing.com/equities/amazon-com-inc
-        const tokens = url.split("/");
+        const tokens = url.split("+");
 
         const code = tokens.pop();
-        const assetType = tokens.pop();
-        const assetTypeSub = tokens.pop();
 
         console.log(`code: ${code}`);
-        console.log(`assetType: ${assetType}`);
 
         const rawFileName = `${code}_${timeKey}+raw.png`;
         const cropFileName = `${code}_${timeKey}.png`;
-        const s3Key = `${INVESTING}/${buildPrefixByDate()}/${cropFileName}`;
+        const s3Key = `${S3_PATH_PREFIX}/${buildPrefixByDate()}/${cropFileName}`;
 
         console.log(`raw file: ${rawFileName}`);
         console.log(`crop file: ${cropFileName}`);
@@ -330,41 +207,12 @@ async function createWebpageImage(url, timeKey, page) {
 
         console.log(`create image: ${rawFileName}`);
 
-        const content = await page.property("content");
-
-        // 20200902: 이유는 알 수 없지만 배너가 사라졌다. 일단 배너 계산하지 않음.
-        let bannerHeight = 250;
-        if (process.env.exist_banner === "1") {
-            // 할 줄 몰라서 대충 찾은 것.
-            const bannerIndex = content.indexOf("wideTopBanner");
-            if (bannerIndex > 0) {
-                const displayNoneIndex = content.indexOf("height:250px; display: none;", bannerIndex);
-                if (displayNoneIndex > bannerIndex) {
-                    bannerHeight = 90;
-                }
-
-                const displayNoneIndex2 = content.indexOf("height: 250px; display: none;", bannerIndex);
-                if (displayNoneIndex2 > bannerIndex) {
-                    bannerHeight = 90;
-                }
-            }
-
-            console.log(`bannerHeight: ${bannerHeight}`);
-        } else {
-            bannerHeight = 0;
-
-            console.log(`zero bannerHeight!`);
-        }
-
         const result = {
             exist_s3: false,
             code: code,
             s3_key: s3Key,
             raw_file_name: rawFileName,
-            crop_file_name: cropFileName,
-            asset_type: assetType,
-            asset_type_sub: assetTypeSub,
-            banner_height: bannerHeight
+            crop_file_name: cropFileName
         };
 
         console.log(`image: ${JSON.stringify(result)}`);
@@ -475,6 +323,11 @@ function getHeight(assetType, assetTypeSub) {
 }
 
 async function cropImageFile(rawFileName, cropFileName, width, height, left, top) {
+    height = 170;
+    width = 450;
+    left = 160;
+    top = 590;
+
     try {
         console.log(`cropImageFile rawFileName, cropFileName, (width, height, left, top): ${rawFileName}, ${cropFileName}, (${width}, ${height}, ${left}, ${top})`);
 
